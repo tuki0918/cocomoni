@@ -6,13 +6,28 @@ on:
 
 jobs:
   build:
-    name: Lint Code Base
+    name: Lint Code
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ '1.14' ]
     steps:
+
       - name: Checkout Code
         uses: actions/checkout@v2
-      - name: Lint Code Base
-        uses: docker://github/super-linter:v2.1.0
-        env:
-          VALIDATE_ALL_CODEBASE: false
-          VALIDATE_GO: true
+
+      - name: Setup go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Get dependencies and Build
+        run: |
+          go mod download
+          go build
+
+      # - name: Lint Code Base
+      #   uses: docker://github/super-linter:v2.2.0
+      #   env:
+      #     VALIDATE_ALL_CODEBASE: false
+      #     VALIDATE_GO: true
