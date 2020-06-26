@@ -9,22 +9,35 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 
 	vision "cloud.google.com/go/vision/apiv1"
 )
 
 const endpoint = "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/cocoa_00138.html"
 
+type AppInfo struct {
+	Version   string
+	Date      string
+	Downloads int
+	Sentence  string
+	Link      string
+}
+
 func main() {
 	body := request()
 	data := parseImageDataByHTML(body)
 	filePath := createImageFile(data)
 	text := imageDetectDocumentText(filePath)
+	appInfo := parseAppInfoByText(text)
+
+	fmt.Println("[version]", appInfo.Version)
+	fmt.Println("[date]", appInfo.Date)
+	fmt.Println("[downloads]", appInfo.Downloads)
+	fmt.Println("[sentence]", appInfo.Sentence)
+	fmt.Println("[link]", appInfo.Link)
 
 	defer os.Remove(filePath)
-
-	fmt.Println(filePath)
-	fmt.Println(text)
 }
 
 func request() string {
@@ -47,6 +60,30 @@ func parseImageDataByHTML(html string) string {
 	r := regexp.MustCompile("<img src=\"data:image/png;base64,(.*?)\"[ /]*?>")
 	data := r.FindStringSubmatch(html)[1]
 	return data
+}
+
+func parseAppInfoByText(text string) AppInfo {
+	r1 := regexp.MustCompile(`最新バージョンは「(\d+.\d+.\d+)」です。`)
+	version := r1.FindStringSubmatch(text)[1]
+
+	r2 := regexp.MustCompile(`ダウンロード数は、(\d+月\d+日\d+:\d+)現在、合計で約(\d+)万件です。`)
+	sentence := r2.FindStringSubmatch(text)[0]
+	date := r2.FindStringSubmatch(text)[1]
+	downloads := r2.FindStringSubmatch(text)[2]
+
+	i, err := strconv.Atoi(downloads)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	appInfo := AppInfo{
+		Version:   version,
+		Date:      date,
+		Downloads: i,
+		Sentence:  sentence,
+		Link:      endpoint,
+	}
+	return appInfo
 }
 
 func createImageFile(data string) string {
