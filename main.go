@@ -63,9 +63,8 @@ func parseImageDataByHTML(html string) string {
 }
 
 func parseAppInfoByText(text string) AppInfo {
-	r1 := regexp.MustCompile(`最新バージョンは「(\d+.\d+.\d+)」です。`)
-	version := r1.FindStringSubmatch(text)[1]
-
+	// r1 := regexp.MustCompile(`最新バージョンは「(\d+.\d+.\d+)」です。`)
+	// version := r1.FindStringSubmatch(text)[1]
 	r2 := regexp.MustCompile(`ダウンロード数は、(\d+月\d+日\d+:\d+)現在、合計で約(\d+)万件です。`)
 	sentence := r2.FindStringSubmatch(text)[0]
 	date := r2.FindStringSubmatch(text)[1]
@@ -77,7 +76,7 @@ func parseAppInfoByText(text string) AppInfo {
 	}
 
 	appInfo := AppInfo{
-		Version:   version,
+		Version:   "x.x.x", // unsupported
 		Date:      date,
 		Downloads: i,
 		Sentence:  sentence,
