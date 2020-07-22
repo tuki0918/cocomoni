@@ -25,11 +25,11 @@ type AppInfo struct {
 }
 
 func main() {
-	body := request()
-	data := parseImageDataByHTML(body)
-	filePath := createImageFile(data)
-	text := imageDetectDocumentText(filePath)
-	appInfo := parseAppInfoByText(text)
+	body := Request()
+	data := ParseImageDataByHTML(body)
+	filePath := CreateImageFile(data)
+	text := DetectDocumentTextByImage(filePath)
+	appInfo := ParseAppInfoByText(text)
 
 	fmt.Println("[version]", appInfo.Version)
 	fmt.Println("[date]", appInfo.Date)
@@ -40,7 +40,7 @@ func main() {
 	defer os.Remove(filePath)
 }
 
-func request() string {
+func Request() string {
 	response, err := http.Get(endpoint)
 	if err != nil {
 		log.Fatal(err)
@@ -56,16 +56,15 @@ func request() string {
 	return string(body)
 }
 
-func parseImageDataByHTML(html string) string {
+func ParseImageDataByHTML(html string) string {
 	r := regexp.MustCompile("<img src=\"data:image/png;base64,(.*?)\"[ /]*?>")
 	data := r.FindStringSubmatch(html)[1]
 	return data
 }
 
-func parseAppInfoByText(text string) AppInfo {
-	r1 := regexp.MustCompile(`最新バージョンは「(\d+.\d+.\d+)」です。`)
-	version := r1.FindStringSubmatch(text)[1]
-
+func ParseAppInfoByText(text string) AppInfo {
+	// r1 := regexp.MustCompile(`最新バージョンは「(\d+.\d+.\d+)」です。`)
+	// version := r1.FindStringSubmatch(text)[1]
 	r2 := regexp.MustCompile(`ダウンロード数は、(\d+月\d+日\d+:\d+)現在、合計で約(\d+)万件です。`)
 	sentence := r2.FindStringSubmatch(text)[0]
 	date := r2.FindStringSubmatch(text)[1]
@@ -77,7 +76,7 @@ func parseAppInfoByText(text string) AppInfo {
 	}
 
 	appInfo := AppInfo{
-		Version:   version,
+		Version:   "x.x.x", // unsupported
 		Date:      date,
 		Downloads: i,
 		Sentence:  sentence,
@@ -86,7 +85,7 @@ func parseAppInfoByText(text string) AppInfo {
 	return appInfo
 }
 
-func createImageFile(data string) string {
+func CreateImageFile(data string) string {
 	dec, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
 		log.Fatal(err)
@@ -105,7 +104,7 @@ func createImageFile(data string) string {
 	return tmpFile.Name()
 }
 
-func imageDetectDocumentText(filePath string) string {
+func DetectDocumentTextByImage(filePath string) string {
 	ctx := context.Background()
 
 	client, err := vision.NewImageAnnotatorClient(ctx)
