@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -17,11 +18,11 @@ import (
 const endpoint = "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/cocoa_00138.html"
 
 type AppInfo struct {
-	Version   string
-	Date      string
-	Downloads int
-	Sentence  string
-	Link      string
+	Version   string `json:"version"`
+	Date      string `json:"date"`
+	Downloads int    `json:"downloads"`
+	Sentence  string `json:"sentence"`
+	Link      string `json:"link"`
 }
 
 func main() {
@@ -31,11 +32,8 @@ func main() {
 	text := DetectDocumentTextByImage(filePath)
 	appInfo := ParseAppInfoByText(text)
 
-	fmt.Println("[version]", appInfo.Version)
-	fmt.Println("[date]", appInfo.Date)
-	fmt.Println("[downloads]", appInfo.Downloads)
-	fmt.Println("[sentence]", appInfo.Sentence)
-	fmt.Println("[link]", appInfo.Link)
+	result, _ := json.Marshal(appInfo)
+	fmt.Println(string(result))
 
 	defer os.Remove(filePath)
 }
